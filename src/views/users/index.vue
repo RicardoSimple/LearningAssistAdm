@@ -39,11 +39,40 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <el-dialog title="新增用户" :visible.sync="addWindowVisible">
+      <el-form :model="form">
+        <el-form-item label="账号" :label-width="formLabelWidth">
+          <el-input v-model="form.username" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="姓名" :label-width="formLabelWidth">
+          <el-input v-model="form.name" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" :label-width="formLabelWidth">
+          <el-input v-model="form.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号" :label-width="formLabelWidth">
+          <el-input v-model="form.phone" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="用户类型" :label-width="formLabelWidth">
+          <el-select  v-model="form.user_type" placeholder="请选择用户类型">
+            <el-option v-for="item in usertypes" :key="item.name" :label=item.name :value=item.value></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="课堂邀请码" :label-width="formLabelWidth">
+          <el-input v-model="form.class_num" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="addWindowVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitAdd">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getUsers } from '@/api/users'
+import { createUser, getUsers } from '@/api/users'
 
 export default {
   data() {
@@ -59,7 +88,30 @@ export default {
       pageNum: 1,
       pageSize: 10,
       total: 0,
-      addWindowVisible: false
+      addWindowVisible: false,
+      form: {
+        name: '',
+        username: '',
+        phone: '',
+        email: '',
+        class_num: '',
+        user_type: ''
+      },
+      formLabelWidth: '200px',
+      usertypes: [
+        {
+          name: '学生',
+          value: 'student'
+        },
+        {
+          name: '老师',
+          value: 'teacher'
+        },
+        {
+          name: '管理员',
+          value: 'admin'
+        }
+      ]
     }
   },
   mounted() {
@@ -92,7 +144,18 @@ export default {
       })
     },
     handleAdd() {
-      this.$message.info('点击了新增用户')
+      this.addWindowVisible = true
+    },
+    submitAdd() {
+      createUser(this.form).then(res => {
+        if (res.code && res.code === 200) {
+          this.$message.success('添加成功')
+        }
+        this.initUsers()
+        this.addWindowVisible = false
+      }).catch(e => {
+        this.$message.error(e)
+      })
     },
     handleEdit(user) {
       this.$message.success(`编辑用户：${user.name}`)

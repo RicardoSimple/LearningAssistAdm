@@ -18,3 +18,10 @@ export const getUsers = (page, pageSize) => {
     method: 'get'
   })
 }
+export const createUser = (data) => {
+  return request({
+    url: '/user/create',
+    method: 'post',
+    data
+  })
+}
