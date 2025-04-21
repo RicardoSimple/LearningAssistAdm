@@ -74,7 +74,13 @@ Vue.use(VueRouter)
 //   }
 // ]
 
-const routes = []
+const routes = [
+  {
+    path: '/login',
+    component: () => import('@/views/login/index'),
+    hidden: true
+  }
+]
 const router = new VueRouter({
   routes
 })
@@ -83,26 +89,65 @@ const router = new VueRouter({
 export function addRoutes(routes) {
   return routes.map((route) => {
     // 递归处理子路由
-    if (route.children) {
+    if (route.children && route.children !== '') {
       route.children = addRoutes(route.children)
     }
 
     // 修改 component 字段
     if (
-      typeof route.component === 'string' &&
-      route.component.startsWith('views/')
+      typeof route.component === 'string'
     ) {
-      route.component = `@/${route.component}.vue`
+      if (typeof route.component === 'string' &&
+        route.component.startsWith('views/dashboard')) {
+        route.component = () => import('@/views/dashboard/index.vue')
+      }
+      if (typeof route.component === 'string' &&
+        route.component.startsWith('views/users')) {
+        route.component = () => import('@/views/users/index.vue')
+      }
+      if (typeof route.component === 'string' &&
+        route.component.startsWith('views/login')) {
+        route.component = () => import('@/views/login/index.vue')
+      }
+      if (typeof route.component === 'string' &&
+        route.component.startsWith('views/course')) {
+        route.component = () => import('@/views/course/index.vue')
+      }
+      if (typeof route.component === 'string' &&
+        route.component.startsWith('views/classes')) {
+        route.component = () => import('@/views/classes/index.vue')
+      }
+      if (typeof route.component === 'string' &&
+        route.component.startsWith('views/404')) {
+        route.component = () => import('@/views/404/index.vue')
+      }
     }
     if (
       typeof route.component === 'string' &&
       route.component.startsWith('layout/index')
     ) {
-      route.component = `@/${route.component}.vue`
+      route.component = () => import('@/layout/index.vue')
     }
-
     return route
   })
 }
+// export function addRoutes(routes) {
+//   return routes.map((route) => {
+//     if (route.children && route.children.length > 0) {
+//       route.children = addRoutes(route.children)
+//     }
+//
+//     // 动态 component 替换
+//     if (typeof route.component === 'string') {
+//       if (route.component === 'layout') {
+//         route.component = () => import('@/layout/index.vue')
+//       } else {
+//         route.component = () => import(`@/views/${route.component}.vue`)
+//       }
+//     }
+//
+//     return route
+//   })
+// }
 
 export default router

@@ -46,33 +46,29 @@
 <script>
 import Logo from './Logo.vue'
 import { mapState } from 'vuex'
+
 export default {
+  components: { Logo },
   computed: {
     ...mapState({
-      isCollapse: (state) => state.app.isCollapse,
-      routes: (state) => state.routes.routes
+      isCollapse: state => state.app.isCollapse,
+      routes: state => state.routes.routes
     }),
+
     defaultActive() {
       return this.$route.path
     },
+
+    // 子菜单项：children.length >= 1
     hasRoutesSubItem() {
-      const routes = this.routes.filter((item) => {
-        if (item.children.length > 1) {
-          return item.children
-        }
-      })
-      return routes
+      return this.routes.filter(item => Array.isArray(item.children) && item.children.length > 0)
     },
+
+    // 普通菜单项：没有 children 或 children 是空数组
     noRoutesSubItem() {
-      const routes = this.routes.filter((item) => {
-        if (item.children.length === 1) {
-          return item.children
-        }
-      })
-      return routes[0].children
+      return this.routes.filter(item => !Array.isArray(item.children) || item.children.length === 0)
     }
-  },
-  components: { Logo }
+  }
 }
 </script>
 

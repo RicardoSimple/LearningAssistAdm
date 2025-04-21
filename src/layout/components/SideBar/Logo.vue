@@ -6,7 +6,7 @@
         src="@/assets/logo.png"
         alt="logo"
       />
-      <span>vue-element-admin</span>
+      <span>智能学习助手后台</span>
     </div>
     <div v-show="isCollapse">
       <img

@@ -1,40 +1,29 @@
 <template>
   <div class="navbar">
     <div class="navbar-left">
-      <i
-        :class="toggleStyle"
-        @click="toggleCollapse"
-      ></i>
-      <el-breadcrumb
-        class="my-breadcrumb"
-        separator-class="el-icon-arrow-right"
-      >
-        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-        <el-breadcrumb-item>活动管理</el-breadcrumb-item>
-        <el-breadcrumb-item>活动列表</el-breadcrumb-item>
-        <el-breadcrumb-item>活动详情</el-breadcrumb-item>
+      <i :class="toggleStyle" @click="toggleCollapse" />
+
+      <!-- 动态面包屑 -->
+      <el-breadcrumb class="my-breadcrumb" separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item to="/">首页</el-breadcrumb-item>
+        <el-breadcrumb-item
+          v-for="(item, index) in breadcrumbList"
+          :key="index"
+        >
+          {{ item.meta.title }}
+        </el-breadcrumb-item>
       </el-breadcrumb>
     </div>
+
     <div class="navbar-right">
-      <el-dropdown
-        trigger="click"
-        @command="handleCommand"
-      >
+      <el-dropdown trigger="click" @command="handleCommand">
         <div class="el-dropdown-link">
-          <img
-            class="user-icon"
-            :src="avatar"
-            alt=""
-          />
-          下拉菜单<i class="el-icon-arrow-down el-icon--right"></i>
+          <img class="user-icon" :src="avatar" alt="" />
+          {{ username || '用户' }}<i class="el-icon-arrow-down el-icon--right"></i>
         </div>
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-          <el-dropdown-item
-            command="logout"
-            divided
-            >退出登录</el-dropdown-item
-          >
+          <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
@@ -43,14 +32,22 @@
 
 <script>
 import { mapState } from 'vuex'
+
 export default {
   computed: {
     ...mapState({
       isCollapse: (state) => state.app.isCollapse,
-      avatar: (state) => state.user.userInfo.avatar
+      avatar: (state) => state.user.userInfo.avatar,
+      username: (state) => state.user.userInfo.name || state.user.userInfo.nickname
     }),
+
     toggleStyle() {
       return this.isCollapse ? 'el-icon-s-unfold' : 'el-icon-s-fold'
+    },
+
+    // 动态面包屑，根据路由 matched
+    breadcrumbList() {
+      return this.$route.matched.filter(item => item.meta && item.meta.title)
     }
   },
   methods: {
@@ -61,8 +58,7 @@ export default {
       if (command === 'logout') {
         this.$store.dispatch('user/logout')
         this.$router.push('/login')
-      }
-      if (command === 'profile') {
+      } else if (command === 'profile') {
         this.$router.push('/profile')
       }
     }

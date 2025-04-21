@@ -27,15 +27,18 @@ export default {
           password: userInfo.password.trim()
         })
           .then((res) => {
+            res = res.data
             // 把数据存到 store
-            commit('SET_USER_INFO', res.msg)
-            commit('SET_TOKEN', res.msg.token)
-            commit('SET_ROLES', res.msg.roles)
+            const tokeninfo = res.token_info
+            console.log(res)
+            commit('SET_USER_INFO', tokeninfo)
+            commit('SET_TOKEN', tokeninfo.token)
+            commit('SET_ROLES', tokeninfo.userType)
 
             // 存到本地
-            storage.setItem('userInfo', res.msg)
-            storage.setItem('token', res.msg.token)
-            storage.setItem('roles', res.msg.roles)
+            storage.setItem('userInfo', tokeninfo)
+            storage.setItem('token', tokeninfo.token)
+            storage.setItem('roles', tokeninfo.user_type)
             resolve()
           })
           .catch((err) => {
