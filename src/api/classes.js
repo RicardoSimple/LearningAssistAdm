@@ -7,6 +7,12 @@ export const createClass = (data) => {
     data
   })
 }
+export const deleteClass = (id) => {
+  return request({
+    url: `/class/delete?id=${id}`,
+    method: 'post'
+  })
+}
 export const getClasses = (page, pageSize) => {
   return request({
     url: `/class/list?page=${page}&pageSize=${pageSize}`,

@@ -16,6 +16,13 @@ export const createCourse = (data) => {
   })
 }
 
+export const deleteCourse = (id) => {
+  return request({
+    url: `/course/delete?id=${id}`,
+    method: 'post'
+  })
+}
+
 export const getCourses = (page, pageSize) => {
   return request({
     url: `/course/get?page=${page}&pageSize=${pageSize}`,

@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import { getClasses, createClass } from '@/api/classes'
+import { getClasses, createClass, deleteClass } from '@/api/classes'
 
 export default {
   data() {
@@ -140,9 +140,13 @@ export default {
         type: 'warning'
       })
         .then(() => {
-          this.classList = this.classList.filter(c => c.id !== cls.id)
-          this.filterClasses()
-          this.$message.success('已删除')
+          deleteClass(cls.id).then(res => {
+            if (res.code && res.code === 200) {
+              this.$message.success('删除成功')
+            }
+            this.classList = this.classList.filter(c => c.id !== cls.id)
+            this.filterClasses()
+          })
         })
         .catch(() => {})
     }

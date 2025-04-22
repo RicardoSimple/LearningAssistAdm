@@ -16,7 +16,11 @@
     <!-- 表格 -->
     <el-table :data="filteredCourses" border stripe style="width: 100%" v-loading="loading">
       <el-table-column prop="name" label="课程名称" width="180" />
-      <el-table-column prop="subject" label="科目" width="120" />
+      <el-table-column prop="subjects" label="科目" width="120" >
+        <template slot-scope="scope">
+          <el-tag class="sub_tag" type="info" v-for="s in scope.row.subjects" :key="s.id">{{s.name}}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="description" label="课程详情" />
       <el-table-column prop="duration" label="时长" width="120" />
       <el-table-column prop="date" label="创建时间" width="180" />
@@ -40,7 +44,7 @@
           <el-input v-model="form.description" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="科目" :label-width="formLabelWidth">
-          <el-select multiple  v-model="form.subject_ids" placeholder="请选择活动区域">
+          <el-select multiple  v-model="form.subject_ids" placeholder="请选择科目">
             <el-option v-for="item in subjects" :key="item.id" :label=item.name :value=item.id></el-option>
           </el-select>
         </el-form-item>
@@ -85,7 +89,7 @@
 </template>
 
 <script>
-import { getCourses, createCourse, getSubjects, createSubject } from '@/api/course'
+import { getCourses, createCourse, getSubjects, createSubject, deleteCourse } from '@/api/course'
 
 export default {
   data() {
@@ -135,11 +139,13 @@ export default {
     initCourse() {
       getCourses(this.pageNum, this.pageSize).then(res => {
         res = res.data
+        console.log(res.courses)
         this.courseList = res.courses
         this.total = res.total
         this.filteredCourses = this.courseList
       })
       getSubjects().then(res => {
+        console.log(res.data)
         this.subjects = res.data
       })
     },
@@ -182,9 +188,15 @@ export default {
         type: 'warning'
       })
         .then(() => {
-          this.courseList = this.courseList.filter(c => c.id !== course.id)
-          this.filterCourses()
-          this.$message.success('已删除')
+          deleteCourse(course.id).then(res => {
+            if (res.code && res.code === 200) {
+              this.$message.success('删除成功')
+            }
+            this.courseList = this.courseList.filter(c => c.id !== course.id)
+            this.filterCourses()
+          }).catch(e => {
+            this.$message.error(e)
+          })
         })
         .catch(() => {})
     }
@@ -201,6 +213,6 @@ export default {
   }
 }
 .sub_tag{
-  margin:5px 10px 5px 0
+  margin:2px 10px 2px 0
 }
 </style>
