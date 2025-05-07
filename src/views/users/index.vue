@@ -35,10 +35,24 @@
       <el-table-column label="操作" width="160" fixed="right">
         <template v-slot="scope">
           <el-button type="text" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+          <el-button type="text" size="small" @click="handleBindUser(scope.row)">绑定班级</el-button>
           <el-button type="text" size="small" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <!-- 分页控件 -->
+    <div style="margin-top: 20px; text-align: right;">
+      <el-pagination
+        background
+        layout="prev, pager, next, sizes, total"
+        :total="total"
+        :page-size="pageSize"
+        :current-page.sync="pageNum"
+        :page-sizes="[5, 15, 10, 20, 50]"
+        @size-change="handleSizeChange"
+        @current-change="handlePageChange"
+      />
+    </div>
 
     <el-dialog title="新增用户" :visible.sync="addWindowVisible">
       <el-form :model="form">
@@ -68,11 +82,26 @@
         <el-button type="primary" @click="submitAdd">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog title="绑定班级" :visible.sync="bindUserWindow">
+      <el-form :model="bindUserForm">
+        <el-form-item label="班级" :label-width="formLabelWidth">
+          <el-select  v-model="bindUserForm.classId" placeholder="请选择班级">
+            <el-option v-for="i in classList" :key="i.id" :label= i.name :value=i.id></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="bindUserWindow = false">取 消</el-button>
+        <el-button type="primary" @click="submitBind">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { createUser, getUsers } from '@/api/users'
+import { bindUserClass, getAllClass } from '@/api/classes'
 
 export default {
   data() {
@@ -111,11 +140,17 @@ export default {
           name: '管理员',
           value: 'admin'
         }
-      ]
+      ],
+      bindUserWindow: false,
+      bindUserForm: {
+        userId: '',
+        classId: ''
+      },
+      classList: []
     }
   },
   mounted() {
-    this.initUsers()
+    this.initData()
   },
   methods: {
     formatUserType(type) {
@@ -126,13 +161,16 @@ export default {
         default: return '未知'
       }
     },
-    initUsers() {
+    initData() {
       getUsers(this.pageNum, this.pageSize).then(res => {
         res = res.data
         console.log(res.list)
         this.userList = res.list
         this.total = res.total
         this.filteredUsers = this.userList
+      })
+      getAllClass().then(res => {
+        this.classList = res.data
       })
     },
     filterUsers() {
@@ -151,14 +189,29 @@ export default {
         if (res.code && res.code === 200) {
           this.$message.success('添加成功')
         }
-        this.initUsers()
+        this.initData()
         this.addWindowVisible = false
+      }).catch(e => {
+        this.$message.error(e)
+      })
+    },
+    submitBind() {
+      bindUserClass(this.bindUserForm).then(res => {
+        if (res.code && res.code === 200) {
+          this.$message.success('绑定成功')
+        }
+        this.initData()
+        this.bindUserWindow = false
       }).catch(e => {
         this.$message.error(e)
       })
     },
     handleEdit(user) {
       this.$message.success(`编辑用户：${user.name}`)
+    },
+    handleBindUser(user) {
+      this.bindUserForm.userId = user.ID
+      this.bindUserWindow = true
     },
     handleDelete(user) {
       this.$confirm(`确认删除用户「${user.name}」？`, '提示', {
@@ -168,7 +221,18 @@ export default {
         this.filterUsers()
         this.$message.success('已删除')
       }).catch(() => {})
+    },
+    handleSizeChange(newSize) {
+      this.pageSize = newSize
+      this.pageNum = 1
+      this.initData()
+    },
+
+    handlePageChange(newPage) {
+      this.pageNum = newPage
+      this.initData()
     }
+
   }
 }
 </script>

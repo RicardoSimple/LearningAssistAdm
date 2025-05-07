@@ -25,3 +25,9 @@ export const createUser = (data) => {
     data
   })
 }
+export const getUsersByType = (type) => {
+  return request({
+    url: `/user/byType?type=${type}`,
+    method: 'get'
+  })
+}

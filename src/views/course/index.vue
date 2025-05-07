@@ -14,9 +14,9 @@
     </el-row>
 
     <!-- 表格 -->
-    <el-table :data="filteredCourses" border stripe style="width: 100%" v-loading="loading">
+    <el-table :data="filteredCourses" border stripe style="width: 100%; height:60%" v-loading="loading">
       <el-table-column prop="name" label="课程名称" width="180" />
-      <el-table-column prop="subjects" label="科目" width="120" >
+      <el-table-column prop="subjects" label="科目" width="250" >
         <template slot-scope="scope">
           <el-tag class="sub_tag" type="info" v-for="s in scope.row.subjects" :key="s.id">{{s.name}}</el-tag>
         </template>
@@ -31,6 +31,19 @@
         </template>
       </el-table-column>
     </el-table>
+    <!-- 表格下添加分页控件 -->
+    <div style="margin-top: 20px; text-align: right;">
+      <el-pagination
+        background
+        layout="prev, pager, next, sizes, total"
+        :total="total"
+        :page-size="pageSize"
+        :current-page.sync="pageNum"
+        :page-sizes="[5,10, 15, 20, 50]"
+        @size-change="handleSizeChange"
+        @current-change="handlePageChange"
+      />
+    </div>
 
     <el-dialog title="新增课程" :visible.sync="addWindowVisible">
       <el-form :model="form">
@@ -199,6 +212,15 @@ export default {
           })
         })
         .catch(() => {})
+    },
+    handleSizeChange(newSize) {
+      this.pageSize = newSize
+      this.pageNum = 1
+      this.initCourse()
+    },
+    handlePageChange(newPage) {
+      this.pageNum = newPage
+      this.initCourse()
     }
   }
 }

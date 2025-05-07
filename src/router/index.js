@@ -118,6 +118,18 @@ export function addRoutes(routes) {
         route.component = () => import('@/views/classes/index.vue')
       }
       if (typeof route.component === 'string' &&
+        route.component.startsWith('views/assignment')) {
+        route.component = () => import('@/views/assignment/index.vue')
+      }
+      if (typeof route.component === 'string' &&
+        route.component.startsWith('views/myClass')) {
+        route.component = () => import('@/views/myClass/index.vue')
+      }
+      if (typeof route.component === 'string' &&
+        route.component.startsWith('views/myAssignment')) {
+        route.component = () => import('@/views/myAssignment/index.vue')
+      }
+      if (typeof route.component === 'string' &&
         route.component.startsWith('views/404')) {
         route.component = () => import('@/views/404/index.vue')
       }

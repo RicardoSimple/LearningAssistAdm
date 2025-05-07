@@ -19,3 +19,35 @@ export const getClasses = (page, pageSize) => {
     method: 'get'
   })
 }
+export const getAllClass = () => {
+  return request({
+    url: '/class/all',
+    method: 'get'
+  })
+}
+export const bindClass = (data) => {
+  return request({
+    url: '/class/bind',
+    method: 'post',
+    data
+  })
+}
+export const bindUserClass = (data) => {
+  return request({
+    url: '/class/user/bind',
+    method: 'post',
+    data
+  })
+}
+export const getMyClass = () => {
+  return request({
+    url: '/class/my',
+    method: 'get'
+  })
+}
+export const getClassStudents = (classId) => {
+  return request({
+    url: `/class/my/students?classId=${classId}`,
+    method: 'get'
+  })
+}

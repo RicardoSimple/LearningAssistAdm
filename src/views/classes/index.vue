@@ -29,10 +29,24 @@
       <el-table-column label="操作" fixed="right" width="160">
         <template v-slot="scope">
           <el-button type="text" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+          <el-button type="text" size="small" @click="handleBind(scope.row)">绑定教师</el-button>
           <el-button type="text" size="small" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <!-- 分页控件 -->
+    <div style="margin-top: 20px; text-align: right;">
+      <el-pagination
+        background
+        layout="prev, pager, next, sizes, total"
+        :total="total"
+        :page-size="pageSize"
+        :current-page.sync="pageNum"
+        :page-sizes="[5, 15, 10, 20, 50]"
+        @size-change="handleSizeChange"
+        @current-change="handlePageChange"
+      />
+    </div>
 
     <el-dialog title="新增班级" :visible.sync="addWindowVisible">
       <el-form :model="form">
@@ -50,11 +64,26 @@
         <el-button type="primary" @click="submitAdd">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog title="绑定教师" :visible.sync="bindWindowVisible">
+      <el-form :model="bindForm">
+        <el-form-item label="教师" :label-width="formLabelWidth">
+          <el-select  v-model="bindForm.teacherId" placeholder="请选择教师">
+            <el-option v-for="i in teacherList" :key="i.ID" :label= i.username :value=i.ID></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="bindWindowVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitBind">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getClasses, createClass, deleteClass } from '@/api/classes'
+import { getClasses, createClass, deleteClass, bindClass } from '@/api/classes'
+import { getUsersByType } from '@/api/users'
 
 export default {
   data() {
@@ -91,15 +120,22 @@ export default {
       pageSize: 10,
       total: 0,
       addWindowVisible: false,
+      bindWindowVisible: false,
       filteredClasses: [],
       form: {
         name: '',
         grade: ''
-      }
+      },
+      teacherList: [],
+      bindForm: {
+        classId: '',
+        teacherId: ''
+      },
+      formLabelWidth: '200px'
     }
   },
   mounted() {
-    this.initClasses()
+    this.initData()
   },
   methods: {
     filterClasses() {
@@ -110,12 +146,16 @@ export default {
         return matchStage && matchKeyword
       })
     },
-    initClasses() {
+    initData() {
       getClasses(this.pageNum, this.pageSize).then(res => {
         res = res.data
         this.classList = res.list
         this.total = res.total
         this.filteredClasses = this.classList
+      })
+      getUsersByType('teacher').then(res => {
+        this.teacherList = res.data
+        console.log(res.data)
       })
     },
     handleAdd() {
@@ -126,14 +166,30 @@ export default {
         if (res.code && res.code === 200) {
           this.$message.success('添加成功')
         }
-        this.initClasses()
+        this.initData()
         this.addWindowVisible = false
+      }).catch(e => {
+        this.$message.error(e)
+      })
+    },
+    submitBind() {
+      console.log(this.bindForm)
+      bindClass(this.bindForm).then(res => {
+        if (res.code && res.code === 200) {
+          this.$message.success('绑定成功')
+        }
+        this.initData()
+        this.bindWindowVisible = false
       }).catch(e => {
         this.$message.error(e)
       })
     },
     handleEdit(cls) {
       this.$message.success(`编辑班级：${cls.name}`)
+    },
+    handleBind(cls) {
+      this.bindForm.classId = cls.id
+      this.bindWindowVisible = true
     },
     handleDelete(cls) {
       this.$confirm(`确认删除班级「${cls.name}」？`, '提示', {
@@ -149,7 +205,18 @@ export default {
           })
         })
         .catch(() => {})
+    },
+    handleSizeChange(newSize) {
+      this.pageSize = newSize
+      this.pageNum = 1
+      this.initData()
+    },
+
+    handlePageChange(newPage) {
+      this.pageNum = newPage
+      this.initData()
     }
+
   }
 }
 </script>
