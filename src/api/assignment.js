@@ -28,3 +28,17 @@ export const deleteAssignment = (id) => {
     method: 'post'
   })
 }
+export const getSubmissions = (page, pageSize, assignment_id) => {
+  return request({
+    url: `/assignment/submissions?page=${page}&pageSize=${pageSize}&assignment_id=${assignment_id}`,
+    method: 'get'
+  })
+}
+
+export const evaluateSubmission = (data) => {
+  return request({
+    url: '/assignment/evaluate',
+    method: 'post',
+    data
+  })
+}

@@ -14,8 +14,15 @@
       <el-table :data="filteredAssignments" stripe v-loading="loading">
         <el-table-column prop="title" label="标题" width="180" />
         <el-table-column prop="course.name" label="所属课程" width="160" />
+        <el-table-column prop="teacher" label="发布人" width="160" />
         <el-table-column prop="due_date" label="截止日期" width="180" />
         <el-table-column prop="content" label="内容" />
+        <el-table-column prop="status" label="完成状态" />
+        <el-table-column label="操作" fixed="right" width="160">
+          <template v-slot="scope">
+            <el-button type="text" size="small" @click="handleEdit(scope.row)">查看</el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div style="margin-top: 20px; text-align: right">

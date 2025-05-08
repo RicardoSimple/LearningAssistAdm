@@ -41,6 +41,67 @@
       />
     </div>
 
+    <!-- 提交记录标题 -->
+    <h3 style="margin: 30px 0 10px;">作业提交记录</h3>
+
+    <el-table :data="submissions" border stripe v-loading="loadingSubmissions">
+      <el-table-column prop="student_name" label="学生姓名" width="150" />
+      <el-table-column prop="title" label="提交标题" width="180" />
+      <el-table-column prop="content" label="内容" />
+      <el-table-column prop="submitted_at" label="提交时间" width="180" />
+      <el-table-column label="批改状态/时间" width="180" >
+        <template v-slot="scope">
+        {{scope.reviewed_at>scope.submitted_at? reviewed_at : '未批改' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="160" fixed="right">
+        <template v-slot="scope">
+          <el-button size="mini" type="text" @click="evaluateEvent(scope.row)">批改</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <div style="margin-top: 20px; text-align: right;">
+      <el-pagination
+        background
+        layout="prev, pager, next, sizes, total"
+        :total="subTotal"
+        :current-page.sync="subPageNum"
+        :page-size.sync="subPageSize"
+        :page-sizes="[5, 10, 20]"
+        @current-change="fetchSubmissions"
+        @size-change="fetchSubmissions"
+      />
+    </div>
+
+    <el-dialog title="作业详情" :visible.sync="showSubmission">
+      <el-card>
+        <div v-html="currentAssignment.content"></div>
+      </el-card>
+      <el-divider content-position="left">提交内容</el-divider>
+      <el-card>
+        <div v-html="currentSubmission.title"></div>
+      </el-card>
+      <el-card>
+        <div v-html="currentSubmission.content"></div>
+      </el-card>
+      <el-divider content-position="left">批改部分</el-divider>
+      <el-card>
+        <el-form :model="evaluateSubmissionForm" label-width="100px">
+          <el-form-item label="分数">
+            <el-input-number :precision="2" :step="0.1" :max="10" v-model="evaluateSubmissionForm.score"/>
+          </el-form-item>
+          <el-form-item label="评价">
+            <el-input type="textarea" v-model="evaluateSubmissionForm.feedback" rows="4" />
+          </el-form-item>
+        </el-form>
+      </el-card>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="showSubmission = false">取 消</el-button>
+        <el-button type="primary" @click="evaluateSubmit">确 定</el-button>
+      </div>
+    </el-dialog>
     <!-- 新增作业对话框 -->
     <el-dialog title="新增作业" :visible.sync="addDialogVisible">
       <el-form :model="form" label-width="100px">
@@ -55,9 +116,9 @@
         <el-form-item label="截止日期">
           <el-date-picker v-model="form.due_date" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" />
         </el-form-item>
-        <el-form-item label="内容">
-          <el-input type="textarea" v-model="form.content" rows="4" />
-        </el-form-item>
+          <article-editor :getHtml="getHtml"
+                          :getTitle="getTitle"
+          ></article-editor>
       </el-form>
 
       <div slot="footer" class="dialog-footer">
@@ -69,12 +130,14 @@
 </template>
 
 <script>
-import { getAssignments, createAssignment, deleteAssignment } from '@/api/assignment.js'
+import { getAssignments, createAssignment, deleteAssignment, getSubmissions, evaluateSubmission } from '@/api/assignment.js'
 import { getCourses } from '@/api/course'
 import { getMyClass } from '@/api/classes'
 import * as storage from '@/utils/storage'
+import ArticleEditor from '@/components/article-editor.vue'
 
 export default {
+  components: { ArticleEditor },
   data() {
     return {
       loading: false,
@@ -82,7 +145,8 @@ export default {
       courseList: [],
       classInfo: '',
       filter: {
-        courseId: null
+        courseId: null,
+        assignmentId: 0
       },
       pageNum: 1,
       pageSize: 10,
@@ -95,6 +159,19 @@ export default {
         due_date: '',
         teacher_id: '',
         class_id: 0
+      },
+      submissions: [],
+      subPageNum: 1,
+      subPageSize: 5,
+      subTotal: 0,
+      loadingSubmissions: false,
+      showSubmission: false,
+      currentSubmission: {},
+      currentAssignment: {},
+      evaluateSubmissionForm: {
+        score: 0,
+        feedback: '',
+        submission_id: ''
       }
     }
   },
@@ -102,6 +179,12 @@ export default {
     this.init()
   },
   methods: {
+    getHtml (text) {
+      this.form.content = text
+    },
+    getTitle (title) {
+      this.form.title = title
+    },
     init() {
       getMyClass().then(res => {
         res = res.data.classes
@@ -117,6 +200,7 @@ export default {
         this.courseList = res.data.courses || []
       })
       this.fetchAssignments()
+      this.fetchSubmissions()
     },
     fetchAssignments() {
       this.loading = true
@@ -133,10 +217,47 @@ export default {
           this.loading = false
         })
     },
+    fetchSubmissions() {
+      this.loadingSubmissions = true
+      // 你可以根据实际接口修改参数名称
+      getSubmissions({
+        assignment_id: this.filter.assignmentId || null,
+        page: this.subPageNum,
+        pageSize: this.subPageSize
+      })
+        .then(res => {
+          this.submissions = res.data.list
+          this.subTotal = res.data.total
+        })
+        .finally(() => {
+          this.loadingSubmissions = false
+        })
+    },
     handleSizeChange(size) {
       this.pageSize = size
       this.pageNum = 1
       this.fetchAssignments()
+    },
+    evaluateEvent(sms) {
+      this.evaluateSubmissionForm.submission_id = sms.id
+      this.currentSubmission = sms
+      const asId = sms.assignment_id
+      for (let i = 0; i < this.assignments.length; i++) {
+        if (this.assignments[i].id === asId) {
+          this.currentAssignment = this.assignments[i]
+          break
+        }
+      }
+      this.showSubmission = true
+    },
+    evaluateSubmit() {
+      console.log(this.evaluateSubmissionForm)
+      evaluateSubmission(this.evaluateSubmissionForm).then(res => {
+        if (res && res.code === 200) {
+          this.$message.success('批改成功')
+          this.showSubmission = false
+        }
+      })
     },
     submitAdd() {
       const userinfo = storage.getItem('userInfo')
