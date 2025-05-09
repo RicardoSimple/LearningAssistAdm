@@ -91,6 +91,9 @@
         <el-form :model="evaluateSubmissionForm" label-width="100px">
           <el-form-item label="分数">
             <el-input-number :precision="2" :step="0.1" :max="10" v-model="evaluateSubmissionForm.score"/>
+            <el-tooltip class="item" effect="dark" content="AI自动评估作业质量并给出分数和评价" placement="right-start">
+            <el-button class="evaluate_smart_button" @click="smartEvaluteEvent">智能批改</el-button>
+            </el-tooltip>
           </el-form-item>
           <el-form-item label="评价">
             <el-input type="textarea" v-model="evaluateSubmissionForm.feedback" rows="4" />
@@ -172,6 +175,10 @@ export default {
         score: 0,
         feedback: '',
         submission_id: ''
+      },
+      smartEvaluteForm: {
+        assignmentId: '',
+        submissionId: ''
       }
     }
   },
@@ -288,6 +295,9 @@ export default {
             this.$message.error('删除失败')
           })
       })
+    },
+    smartEvaluteEvent() {
+
     }
   }
 }
@@ -299,6 +309,9 @@ export default {
 
   .toolbar {
     margin-bottom: 20px;
+  }
+  .evaluate_smart_button{
+    margin: 0px 50px 0px 50px;
   }
 }
 </style>
