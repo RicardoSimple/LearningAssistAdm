@@ -133,7 +133,7 @@
 </template>
 
 <script>
-import { getAssignments, createAssignment, deleteAssignment, getSubmissions, evaluateSubmission } from '@/api/assignment.js'
+import { getAssignments, createAssignment, deleteAssignment, getSubmissions, evaluateSubmission, SmartEvaluateSubmission } from '@/api/assignment.js'
 import { getCourses } from '@/api/course'
 import { getMyClass } from '@/api/classes'
 import * as storage from '@/utils/storage'
@@ -297,7 +297,14 @@ export default {
       })
     },
     smartEvaluteEvent() {
-
+      this.smartEvaluteForm.assignmentId = this.currentAssignment.id
+      this.smartEvaluteForm.submissionId = this.currentSubmission.id
+      console.log(this.smartEvaluteForm)
+      SmartEvaluateSubmission(this.smartEvaluteForm).then(res => {
+        console.log(res.data)
+        this.evaluateSubmissionForm.score = res.data.score
+        this.evaluateSubmissionForm.feedback = res.data.feedback
+      })
     }
   }
 }

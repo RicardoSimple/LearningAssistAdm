@@ -42,3 +42,11 @@ export const evaluateSubmission = (data) => {
     data
   })
 }
+
+export const SmartEvaluateSubmission = (data) => {
+  return request({
+    url: '/assignment/algo/evaluate',
+    method: 'post',
+    data
+  })
+}
