@@ -49,7 +49,7 @@ export default {
     return {
       isLoading: false,
       loginForm: {
-        username: 'test测试',
+        username: '管理员admin',
         password: '123123'
       },
       loginRules: {
