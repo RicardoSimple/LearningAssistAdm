@@ -55,7 +55,7 @@
     </div>
 
     <el-dialog title="新增用户" :visible.sync="addWindowVisible">
-      <el-form :model="form">
+      <el-form :model="form" ref="form">
         <el-form-item label="账号" :label-width="formLabelWidth">
           <el-input v-model="form.username" autocomplete="off"></el-input>
         </el-form-item>
@@ -83,6 +83,29 @@
       </div>
     </el-dialog>
 
+    <el-dialog title="编辑用户" :visible.sync="editWindowVisible">
+      <el-form :model="editform" ref="form">
+        <el-form-item label="姓名" :label-width="formLabelWidth">
+          <el-input v-model="editform.name" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" :label-width="formLabelWidth">
+          <el-input v-model="editform.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号" :label-width="formLabelWidth">
+          <el-input v-model="editform.phoneNumber" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="用户类型" :label-width="formLabelWidth">
+          <el-select  v-model="editform.userType" placeholder="请选择用户类型">
+            <el-option v-for="item in usertypes" :key="item.name" :label=item.name :value=item.value></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="editWindowVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitEdit">确 定</el-button>
+      </div>
+    </el-dialog>
+
     <el-dialog title="绑定班级" :visible.sync="bindUserWindow">
       <el-form :model="bindUserForm">
         <el-form-item label="班级" :label-width="formLabelWidth">
@@ -100,7 +123,7 @@
 </template>
 
 <script>
-import { createUser, getUsers } from '@/api/users'
+import { createUser, getUsers, getUserInfo, updateUser, deleteUser } from '@/api/users'
 import { bindUserClass, getAllClass } from '@/api/classes'
 
 export default {
@@ -118,6 +141,7 @@ export default {
       pageSize: 10,
       total: 0,
       addWindowVisible: false,
+      editWindowVisible: false,
       form: {
         name: '',
         username: '',
@@ -125,6 +149,13 @@ export default {
         email: '',
         class_num: '',
         user_type: ''
+      },
+      editform: {
+        ID: '',
+        name: '',
+        phoneNumber: '',
+        email: '',
+        userType: ''
       },
       formLabelWidth: '200px',
       usertypes: [
@@ -149,7 +180,7 @@ export default {
       classList: []
     }
   },
-  mounted() {
+  created() {
     this.initData()
   },
   methods: {
@@ -173,6 +204,16 @@ export default {
         this.classList = res.data
       })
     },
+    resetForm() {
+      this.form = {
+        name: '',
+        username: '',
+        phone: '',
+        email: '',
+        class_num: '',
+        user_type: ''
+      }
+    },
     filterUsers() {
       const { username, userType } = this.filter
       this.filteredUsers = this.userList.filter(user => {
@@ -188,11 +229,21 @@ export default {
       createUser(this.form).then(res => {
         if (res.code && res.code === 200) {
           this.$message.success('添加成功')
+          this.resetForm()
         }
         this.initData()
         this.addWindowVisible = false
       }).catch(e => {
         this.$message.error(e)
+      })
+    },
+    submitEdit() {
+      updateUser(this.editform).then(res => {
+        if (res.code && res.code === 200) {
+          this.$message.success('编辑成功')
+        }
+        this.initData()
+        this.editWindowVisible = false
       })
     },
     submitBind() {
@@ -207,7 +258,14 @@ export default {
       })
     },
     handleEdit(user) {
-      this.$message.success(`编辑用户：${user.name}`)
+      getUserInfo(user.ID).then(res => {
+        this.editform.ID = user.ID
+        this.editform.name = res.data.name
+        this.editform.email = res.data.email
+        this.editform.phoneNumber = res.data.phoneNumber
+        this.editform.userType = res.data.userType
+        this.editWindowVisible = true
+      })
     },
     handleBindUser(user) {
       this.bindUserForm.userId = user.ID
@@ -217,9 +275,13 @@ export default {
       this.$confirm(`确认删除用户「${user.name}」？`, '提示', {
         type: 'warning'
       }).then(() => {
+        deleteUser(user.ID).then(res => {
+          if (res.code && res.code === 200) {
+            this.$message.success('删除成功')
+          }
+        })
         this.userList = this.userList.filter(u => u.id !== user.id)
-        this.filterUsers()
-        this.$message.success('已删除')
+        this.initData()
       }).catch(() => {})
     },
     handleSizeChange(newSize) {

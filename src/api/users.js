@@ -25,9 +25,28 @@ export const createUser = (data) => {
     data
   })
 }
+export const updateUser = (data) => {
+  return request({
+    url: '/user/update',
+    method: 'post',
+    data
+  })
+}
 export const getUsersByType = (type) => {
   return request({
     url: `/user/byType?type=${type}`,
     method: 'get'
+  })
+}
+export const getUserInfo = (id) => {
+  return request({
+    url: `/user/info?id=${id}`,
+    method: 'get'
+  })
+}
+export const deleteUser = (id) => {
+  return request({
+    url: `/user/delete?id=${id}`,
+    method: 'post'
   })
 }

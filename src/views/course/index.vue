@@ -72,6 +72,16 @@
             value-format="yyyy-MM-dd HH:mm:ss">
           </el-date-picker>
         </el-form-item>
+        <el-form-item label="课程详情" :label-width="formLabelWidth">
+          <el-input v-model="form.prompt" type="textarea" maxlength="200" placeholder="请输入生成提示语(可选)"></el-input>
+          <el-tooltip class="item" effect="dark" content="AI根据已填内容自动给出课程详情" placement="right-start">
+            <el-button class="smart_detail_button" @click="smartCourseDetailEvent">智能生成</el-button>
+          </el-tooltip>
+        </el-form-item>
+        <article-editor class="editor" :getHtml="getHtml"
+                        :getTitle="getTitle"
+        ></article-editor>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="addWindowVisible = false">取 消</el-button>
@@ -103,8 +113,10 @@
 
 <script>
 import { getCourses, createCourse, getSubjects, createSubject, deleteCourse } from '@/api/course'
+import ArticleEditor from '@/components/article-editor.vue'
 
 export default {
+  components: { ArticleEditor },
   data() {
     return {
       loading: false,
@@ -131,7 +143,9 @@ export default {
         description: '',
         cover: '',
         duration: 0,
-        date: ''
+        date: '',
+        course_detail: '',
+        prompt: ''
       },
       formLabelWidth: '200px',
       subjectForm: {
@@ -143,6 +157,12 @@ export default {
     this.initCourse()
   },
   methods: {
+    getHtml (text) {
+      this.form.course_detail = text
+    },
+    getTitle (title) {
+      this.form.title = title
+    },
     filterCourses() {
       const keyword = this.search.toLowerCase()
       this.filteredCourses = this.courseList.filter(c =>
@@ -221,6 +241,9 @@ export default {
     handlePageChange(newPage) {
       this.pageNum = newPage
       this.initCourse()
+    },
+    smartCourseDetailEvent() {
+
     }
   }
 }
@@ -233,6 +256,12 @@ export default {
   .toolbar {
     margin-bottom: 20px;
   }
+}
+.smart_detail_button{
+  margin: 20px 0px 20px 0px;
+}
+.editor{
+  width: 55vw;
 }
 .sub_tag{
   margin:2px 10px 2px 0
