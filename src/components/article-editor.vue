@@ -75,7 +75,7 @@ export default {
       },
       editorConfig: {
         placeholder: '请输入内容...',
-        scroll: false,
+        scroll: true,
         // autoFocus: false,
 
         // 所有的菜单配置，都要在 MENU_CONF 属性下
@@ -87,7 +87,8 @@ export default {
               Authorization: getItem('token')
             }
           }
-        }
+        },
+        EXTENDS: 'markdown'
       }
     }
   },
@@ -100,6 +101,15 @@ export default {
         Message.warning(`最多允许${this.maxTitleLength}个字`)
         return false
       }
+    },
+    currentHtml(newVal) {
+      if (this.editor && newVal !== this.html) {
+        this.editor.setHtml(newVal)
+        this.html = newVal
+      }
+    },
+    currentTitle(newVal) {
+      this.title = newVal
     }
   },
   created () {

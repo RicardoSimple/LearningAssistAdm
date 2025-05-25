@@ -16,6 +16,14 @@ export const createCourse = (data) => {
   })
 }
 
+export const updateCourse = (data) => {
+  return request({
+    url: '/course/update',
+    method: 'post',
+    data
+  })
+}
+
 export const deleteCourse = (id) => {
   return request({
     url: `/course/delete?id=${id}`,
@@ -33,6 +41,21 @@ export const getCourses = (page, pageSize) => {
 export const getSubjects = () => {
   return request({
     url: '/course/subject/getAll',
+    method: 'get'
+  })
+}
+
+export const generateCourseDetail = (data) => {
+  return request({
+    url: '/course/algo/detail',
+    method: 'post',
+    data
+  })
+}
+
+export const getById = (id) => {
+  return request({
+    url: `/course/byId/get?id=${id}`,
     method: 'get'
   })
 }

@@ -75,11 +75,12 @@
         <el-form-item label="课程详情" :label-width="formLabelWidth">
           <el-input v-model="form.prompt" type="textarea" maxlength="200" placeholder="请输入生成提示语(可选)"></el-input>
           <el-tooltip class="item" effect="dark" content="AI根据已填内容自动给出课程详情" placement="right-start">
-            <el-button class="smart_detail_button" @click="smartCourseDetailEvent">智能生成</el-button>
+            <el-button class="smart_detail_button" :loading="generateLoading" @click="smartCourseDetailEvent">智能生成</el-button>
           </el-tooltip>
         </el-form-item>
         <article-editor class="editor" :getHtml="getHtml"
                         :getTitle="getTitle"
+                        :currentHtml="form.course_detail"
         ></article-editor>
 
       </el-form>
@@ -108,11 +109,56 @@
         <el-button type="primary" @click="submitAddSubject;subjectWindowVisible = false">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog title="编辑课程" :visible.sync="updateWindowVisible">
+      <el-form :model="Updateform">
+        <el-form-item label="课程名称" :label-width="formLabelWidth">
+          <el-input v-model="Updateform.name" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="封面URL" :label-width="formLabelWidth">
+          <el-input v-model="Updateform.cover" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="课程描述" :label-width="formLabelWidth">
+          <el-input v-model="Updateform.description" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="科目" :label-width="formLabelWidth">
+          <el-select multiple  v-model="Updateform.subject_ids" placeholder="请选择科目">
+            <el-option v-for="item in subjects" :key="item.id" :label=item.name :value=item.id></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="课程时长" :label-width="formLabelWidth">
+          <el-input v-model="Updateform.duration" type="number" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="日期" :label-width="formLabelWidth">
+          <el-date-picker
+            v-model="Updateform.date"
+            type="date"
+            placeholder="选择日期"
+            value-format="yyyy-MM-dd HH:mm:ss">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="课程详情" :label-width="formLabelWidth">
+          <el-input v-model="Updateform.prompt" type="textarea" maxlength="200" placeholder="请输入生成提示语(可选)"></el-input>
+          <el-tooltip class="item" effect="dark" content="AI根据已填内容自动给出课程详情" placement="right-start">
+            <el-button class="smart_detail_button" :loading="generateLoading" @click="smartCourseDetailEvent(true)">智能生成</el-button>
+          </el-tooltip>
+        </el-form-item>
+        <article-editor class="editor" :getHtml="getUpdateHtml"
+                        :getTitle="getUpdateTitle"
+                        :currentHtml="Updateform.course_detail"
+        ></article-editor>
+
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="updateWindowVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitUpdate">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getCourses, createCourse, getSubjects, createSubject, deleteCourse } from '@/api/course'
+import { getCourses, createCourse, getSubjects, createSubject, deleteCourse, generateCourseDetail, updateCourse, getById } from '@/api/course'
 import ArticleEditor from '@/components/article-editor.vue'
 
 export default {
@@ -147,10 +193,22 @@ export default {
         course_detail: '',
         prompt: ''
       },
+      Updateform: {
+        name: '',
+        subject_ids: [],
+        description: '',
+        cover: '',
+        duration: 0,
+        date: '',
+        course_detail: '',
+        prompt: ''
+      },
       formLabelWidth: '200px',
       subjectForm: {
         name: ''
-      }
+      },
+      updateWindowVisible: false,
+      generateLoading: false
     }
   },
   mounted() {
@@ -161,6 +219,12 @@ export default {
       this.form.course_detail = text
     },
     getTitle (title) {
+      this.form.title = title
+    },
+    getUpdateHtml (text) {
+      this.form.course_detail = text
+    },
+    getUpdateTitle (title) {
       this.form.title = title
     },
     filterCourses() {
@@ -203,6 +267,18 @@ export default {
         this.$message.error(e)
       })
     },
+    submitUpdate() {
+      updateCourse(this.Updateform).then(res => {
+        if (res.code && res.code === 200) {
+          this.$message.success('编辑成功')
+        }
+        this.initCourse()
+        this.updateWindowVisible = false
+      }).catch(e => {
+        this.$message.error(e)
+      })
+    },
+
     submitAddSubject() {
       createSubject(this.subjectForm).then(res => {
         if (res.code && res.code === 200) {
@@ -214,7 +290,10 @@ export default {
       })
     },
     handleEdit(course) {
-      this.$message.success(`编辑课程：${course.name}`)
+      getById(course.id).then(res => {
+        this.Updateform = res.data
+        this.updateWindowVisible = true
+      })
     },
     handleDelete(course) {
       this.$confirm(`确认删除课程「${course.name}」？`, '提示', {
@@ -242,8 +321,25 @@ export default {
       this.pageNum = newPage
       this.initCourse()
     },
-    smartCourseDetailEvent() {
-
+    smartCourseDetailEvent(isUpdate) {
+      this.generateLoading = true
+      let subForm
+      if (isUpdate) {
+        subForm = this.Updateform
+      } else {
+        subForm = this.form
+      }
+      generateCourseDetail(subForm).then(res => {
+        if (isUpdate) {
+          this.Updateform.course_detail = res.data
+        } else {
+          this.form.course_detail = res.data
+        }
+        console.log(res.data)
+      }).finally(res => {
+        this.generateLoading = false
+      }
+      )
     }
   }
 }
